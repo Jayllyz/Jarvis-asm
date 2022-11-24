@@ -1,2 +1,5 @@
-# Jarvis-asm
-Jarvis algorithm using assembler
+# Jarvis algorithm
+
+Jarvis algorithm using assembly
+
+Quentin & Simon & Antony
