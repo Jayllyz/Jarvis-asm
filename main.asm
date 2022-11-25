@@ -151,7 +151,7 @@ comeback:
 
 inc byte[counterPoints]
 cmp byte[counterPoints], MaxPoints
-jb placePoints
+jbe placePoints
 
 ;##############################################
 ;# Fin de la partie ou Simon fait de la merde #
@@ -207,14 +207,18 @@ generate:
     tooHigh:
     rdrand rax
 
-    cmp ax, 400
+    cmp ax, 350
     ja tooHigh
+    cmp ax, 50
+    jb tooHigh
     mov word[x1],ax
 
     tooHigh2:
     rdrand rax
 
-    cmp ax, 400
+    cmp ax, 350
     ja tooHigh2
+    cmp ax, 50
+    jb tooHigh2
     mov word[y1],ax
 ret
