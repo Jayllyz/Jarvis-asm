@@ -14,7 +14,7 @@ extern XDrawPoint
 extern XFillArc
 extern XNextEvent
 
-; external functions from stdio library (ld-linux-x86-64.so.2)    
+; external functions from stdio library (ld-linux-x86-64.so.2)
 extern printf
 extern exit
 
@@ -31,18 +31,21 @@ extern exit
 %define DWORD	4
 %define WORD	2
 %define BYTE	1
+%define MaxPoints	10
 
 global main
 
 section .bss
 display_name:	resq	1
-screen:			resd	1
+screen:		resd	1
 depth:         	resd	1
 connection:    	resd	1
 width:         	resd	1
 height:        	resd	1
 window:		resq	1
 gc:		resq	1
+
+;pas dans le code de base
 
 section .data
 
@@ -53,8 +56,13 @@ x2:	dd	0
 y1:	dd	0
 y2:	dd	0
 
+;pas dans le code de base
+test2: 	db 	"Le resultat: %d ", 10, 0
+second: db 0
+counterPoints: db 0
+
 section .text
-	
+
 ;##################################################
 ;########### PROGRAMME PRINCIPAL ##################
 ;##################################################
@@ -81,7 +89,7 @@ mov rdx,10
 mov rcx,10
 mov r8,400	; largeur
 mov r9,400	; hauteur
-push 0xFFFFFF	; background  0xRRGGBB
+push 0x000000	; background  0xRRGGBB
 push 0x00FF00
 push 1
 call XCreateSimpleWindow
@@ -104,7 +112,7 @@ mov qword[gc],rax
 
 mov rdi,qword[display_name]
 mov rsi,qword[gc]
-mov rdx,0x000000	; Couleur du crayon
+mov rdx,0xFFFFFF	; Couleur du crayon
 call XSetForeground
 
 boucle: ; boucle de gestion des évènements
@@ -113,17 +121,44 @@ mov rsi,event
 call XNextEvent
 
 cmp dword[event],ConfigureNotify	; à l'apparition de la fenêtre
-je dessin							; on saute au label 'dessin'
-
-cmp dword[event],KeyPress			; Si on appuie sur une touche
-je closeDisplay						; on saute au label 'closeDisplay' qui ferme la fenêtre
+je dessin				; on saute au label 'dessin'
+cmp dword[event],KeyPress		; Si on appuie sur une touche
+je closeDisplay				; on saute au label 'closeDisplay' qui ferme la fenêtre
 jmp boucle
 
 ;#########################################
-;#		DEBUT DE LA ZONE DE DESSIN		 #
+;#	DEBUT DE LA ZONE DE DESSIN	 #
 ;#########################################
-dessin:
 
+
+;########################################
+;#   Partie ou Simon fait de la merde   #
+;########################################
+
+push rbp
+
+placePoints:
+
+call generate
+
+mov rdi, test2
+movzx rsi, word[x1]
+mov rax, 0
+call printf
+
+jmp dessin
+comeback:
+
+inc byte[counterPoints]
+cmp byte[counterPoints], MaxPoints
+jb placePoints
+
+;##############################################
+;# Fin de la partie ou Simon fait de la merde #
+;##############################################
+
+
+dessin:
 ;couleur du point 1
 mov rdi,qword[display_name]
 mov rsi,qword[gc]
@@ -134,9 +169,9 @@ call XSetForeground
 mov rdi,qword[display_name]
 mov rsi,qword[window]
 mov rdx,qword[gc]
-mov rcx,100		; coordonnée en x du point
+mov rcx,qword[x1]		; coordonnée en x du point
 sub ecx,3
-mov r8,200 		; coordonnée en y du point
+mov r8,qword[y1] 		; coordonnée en y du point
 sub r8,3
 mov r9,6
 mov rax,23040
@@ -145,109 +180,8 @@ push 0
 push r9
 call XFillArc
 
-;couleur du point 2
-mov rdi,qword[display_name]
-mov rsi,qword[gc]
-mov edx,0x00FF00	; Couleur du crayon ; vert
-call XSetForeground
-
-; Dessin d'un point vert sous forme d'un petit rond : coordonnées (100,250)
-mov rdi,qword[display_name]
-mov rsi,qword[window]
-mov rdx,qword[gc]
-mov rcx,100		; coordonnée en x du point
-sub ecx,3
-mov r8,250 		; coordonnée en y du point
-sub r8,3
-mov r9,6
-mov rax,23040
-push rax
-push 0
-push r9
-call XFillArc
-
-;couleur du point 3
-mov rdi,qword[display_name]
-mov rsi,qword[gc]
-mov edx,0x0000FF	; Couleur du crayon ; bleu
-call XSetForeground
-
-; Dessin d'un point vert sous forme d'un petit rond : coordonnées (200,200)
-mov rdi,qword[display_name]
-mov rsi,qword[window]
-mov rdx,qword[gc]
-mov rcx,200		; coordonnée en x du point
-sub ecx,3
-mov r8,200 		; coordonnée en y du point
-sub r8,3
-mov r9,6
-mov rax,23040
-push rax
-push 0
-push r9
-call XFillArc
-
-;couleur du point 4
-mov rdi,qword[display_name]
-mov rsi,qword[gc]
-mov edx,0xFF00FF	; Couleur du crayon ; violet
-call XSetForeground
-
-; Dessin d'un point vert sous forme d'un petit rond : coordonnées (200,250)
-mov rdi,qword[display_name]
-mov rsi,qword[window]
-mov rdx,qword[gc]
-mov rcx,200		; coordonnée en x du point
-sub ecx,3
-mov r8,250 		; coordonnée en y du point
-sub r8,3
-mov r9,6
-mov rax,23040
-push rax
-push 0
-push r9
-call XFillArc
-
-;couleur de la ligne 1
-mov rdi,qword[display_name]
-mov rsi,qword[gc]
-mov edx,0x000000	; Couleur du crayon ; noir
-call XSetForeground
-; coordonnées de la ligne 1 (noire)
-mov dword[x1],50
-mov dword[y1],50
-mov dword[x2],200
-mov dword[y2],350
-; dessin de la ligne 1
-mov rdi,qword[display_name]
-mov rsi,qword[window]
-mov rdx,qword[gc]
-mov ecx,dword[x1]	; coordonnée source en x
-mov r8d,dword[y1]	; coordonnée source en y
-mov r9d,dword[x2]	; coordonnée destination en x
-push qword[y2]		; coordonnée destination en y
-call XDrawLine
-
-;couleur de la ligne 2
-mov rdi,qword[display_name]
-mov rsi,qword[gc]
-mov edx,0xFFAA00	; Couleur du crayon ; orange
-call XSetForeground
-; coordonnées de la ligne 1 (noire)
-mov dword[x1],300
-mov dword[y1],50
-mov dword[x2],50
-mov dword[y2],350
-; dessin de la ligne 1
-mov rdi,qword[display_name]
-mov rsi,qword[window]
-mov rdx,qword[gc]
-mov ecx,dword[x1]	; coordonnée source en x
-mov r8d,dword[y1]	; coordonnée source en y
-mov r9d,dword[x2]	; coordonnée destination en x
-push qword[y2]		; coordonnée destination en y
-call XDrawLine
-
+cmp byte[counterPoints], MaxPoints
+jb comeback
 
 ; ############################
 ; # FIN DE LA ZONE DE DESSIN #
@@ -267,4 +201,20 @@ closeDisplay:
     call    XCloseDisplay
     xor	    rdi,rdi
     call    exit
-	
+
+global generate 
+generate: 
+    tooHigh:
+    rdrand rax
+
+    cmp ax, 400
+    ja tooHigh
+    mov word[x1],ax
+
+    tooHigh2:
+    rdrand rax
+
+    cmp ax, 400
+    ja tooHigh2
+    mov word[y1],ax
+ret
