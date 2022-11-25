@@ -135,6 +135,8 @@ jmp boucle
 ;#   Partie ou Simon fait de la merde   #
 ;########################################
 
+startProg:
+
 push rbp
 
 placePoints:
@@ -146,12 +148,14 @@ movzx rsi, word[x1]
 mov rax, 0
 call printf
 
+cmp byte[counterPoints],  0
+je comeback
 jmp dessin
 comeback:
 
 inc byte[counterPoints]
 cmp byte[counterPoints], MaxPoints
-jbe placePoints
+jb placePoints
 
 ;##############################################
 ;# Fin de la partie ou Simon fait de la merde #
@@ -164,6 +168,9 @@ mov rdi,qword[display_name]
 mov rsi,qword[gc]
 mov edx,0xFF0000	; Couleur du crayon ; rouge
 call XSetForeground
+
+cmp byte[counterPoints], 0
+je startProg
 
 ; Dessin d'un point rouge sous forme d'un petit rond : coordonnées (100,200)
 mov rdi,qword[display_name]
@@ -202,8 +209,8 @@ closeDisplay:
     xor	    rdi,rdi
     call    exit
 
-global generate 
-generate: 
+global generate
+generate:
     tooHigh:
     rdrand rax
 
