@@ -46,6 +46,8 @@ window:		resq	1
 gc:		resq	1
 
 ;pas dans le code de base
+tableX:		resw	MaxPoints
+tableY:		resw	MaxPoints
 
 section .data
 
@@ -58,8 +60,9 @@ y2:	dd	0
 
 ;pas dans le code de base
 test2: 	db 	"Le resultat: %d ", 10, 0
-second: db 0
-counterPoints: db 0
+second: db 	0
+counterPoints: 	db 	0
+lmao:	db 	"t[%d]=%d", 10, 0
 
 section .text
 
@@ -211,21 +214,44 @@ closeDisplay:
 
 global generate
 generate:
-    tooHigh:
-    rdrand rax
 
-    cmp ax, 350
-    ja tooHigh
-    cmp ax, 50
-    jb tooHigh
-    mov word[x1],ax
+	tooHigh:
+	rdrand rax
 
-    tooHigh2:
-    rdrand rax
+	cmp ax, 350
+	ja tooHigh
+	cmp ax, 50
+	jb tooHigh
+    	mov word[x1],ax
 
-    cmp ax, 350
-    ja tooHigh2
-    cmp ax, 50
-    jb tooHigh2
-    mov word[y1],ax
+	;Rangement dans le tableau
+	movzx ecx, byte[counterPoints]
+	mov [tableX + ecx * WORD], ax
+
+	;code pour voir le tableau
+	;mov rdi, lmao
+	;movzx rsi, byte[counterPoints]
+	;movzx rdx, word[tableX + ecx*WORD]
+	;mov rax, 0
+	;call printf
+
+   	tooHigh2:
+	rdrand rax
+
+   	cmp ax, 350
+	ja tooHigh2
+    	cmp ax, 50
+    	jb tooHigh2
+    	mov word[y1],ax
+
+	;Rangement dans le tableau
+	movzx ecx, byte[counterPoints]
+	mov [tableY + ecx * WORD], ax
+
+	;code pour voir le tableau
+	;mov rdi, lmao
+	;movzx rsi, byte[counterPoints]
+	;movzx rdx, word[tableY + ecx*WORD]
+	;mov rax, 0
+	;call printf
 ret
