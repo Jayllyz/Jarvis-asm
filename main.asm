@@ -31,7 +31,7 @@ extern exit
 %define DWORD	4
 %define WORD	2
 %define BYTE	1
-%define MaxPoints	10
+%define MaxPoints	5
 
 global main
 
@@ -48,7 +48,8 @@ gc:		resq	1
 ;pas dans le code de base
 tableX:		resw	MaxPoints
 tableY:		resw	MaxPoints
-
+startingPoint: 	resw	1
+startingNumber:	resb	1
 section .data
 
 event:		times	24 dq 0
@@ -63,6 +64,10 @@ test2: 	db 	"Le resultat: %d ", 10, 0
 second: db 	0
 counterPoints: 	db 	0
 lmao:	db 	"t[%d]=%d", 10, 0
+counterTable:	db	0
+
+testValue1:	db	2
+testValue2:	db	2
 
 section .text
 
@@ -152,13 +157,23 @@ mov rax, 0
 call printf
 
 cmp byte[counterPoints],  0
-je comeback
+je afterStartProg
 jmp dessin
 comeback:
 
 inc byte[counterPoints]
 cmp byte[counterPoints], MaxPoints
 jb placePoints
+
+call vector
+
+;exemple pour la multi
+mov al, byte[testValue1]
+imul byte[testValue2]
+mov rdi, test2
+movzx rsi, al
+mov rax, 0
+call printf
 
 ;##############################################
 ;# Fin de la partie ou Simon fait de la merde #
@@ -174,6 +189,8 @@ call XSetForeground
 
 cmp byte[counterPoints], 0
 je startProg
+
+afterStartProg:
 
 ; Dessin d'un point rouge sous forme d'un petit rond : coordonnées (100,200)
 mov rdi,qword[display_name]
@@ -254,4 +271,37 @@ generate:
 	;movzx rdx, word[tableY + ecx*WORD]
 	;mov rax, 0
 	;call printf
+ret
+
+global vector
+
+vector:
+	movzx ecx, byte[counterTable]
+	mov ax, [tableX+ecx*WORD]
+
+	cmp byte[counterTable], 0
+	je storeX
+
+	cmp ax, word[startingPoint]
+	jb storeX
+
+continueVector:
+	inc byte[counterTable]
+	cmp byte[counterTable], MaxPoints
+	jb vector
+	jmp showStarting
+
+storeX:
+	movzx ecx, byte[counterTable]
+	mov word[startingPoint], ax
+	mov al, byte[counterTable]
+	mov byte[startingNumber], al
+	jmp continueVector
+
+showStarting:
+	mov rdi, lmao
+	movzx rsi, byte[startingNumber]
+	movzx rdx, word[startingPoint]
+	mov rax, 0
+	call printf
 ret
