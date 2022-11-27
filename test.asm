@@ -46,6 +46,8 @@ window:		resq	1
 gc:		resq	1
 
 ;pas dans le code de base
+temp:		resq	1
+
 tableX:		resw	MaxPoints
 tableY:		resw	MaxPoints
 
@@ -54,13 +56,13 @@ startingNumber:	resb	1
 firstPoint:	resb	1
 secondPoint:	resb	1
 
-valueClock1:	resw	1
-valueClock2:	resw	1
-valueClock3:	resw	1
-valueClock4:	resw	1
+valueClock1:	resd	1
+valueClock2:	resd	1
+valueClock3:	resd	1
+valueClock4:	resd	1
 
-multClock1:	resw	1
-multClock2:	resw	1
+multClock1:	resq	1
+multClock2:	resq	1
 
 section .data
 
@@ -73,6 +75,19 @@ y2:	dd	0
 
 ;pas dans le code de base
 test2: 	db 	"Le resultat: %d ", 10, 0
+test3: db	"Result: %d", 10, 0
+test4: db	"al = %d", 10, 0
+test5: db	"secondPoint = %d", 10, 0
+test6: db	"counterTable = %d", 10, 0
+
+testClock1: db 	"valueClock1: %d", 10, 0
+testClock2: db 	"valueClock2: %d", 10, 0
+testClock3: db 	"valueClock3: %d", 10, 0
+testClock4: db 	"valueClock4: %d", 10, 0
+
+testClockMult1: db "multClock1: %d", 10, 0
+testClockMult2: db "multClock2: %d", 10, 0
+
 second: db 	0
 counterPoints: 	db 	0
 lmao:	db 	"t[%d]=%d", 10, 0
@@ -163,10 +178,10 @@ placePoints:
 
 call generate
 
-mov rdi, test2
-movzx rsi, word[x1]
-mov rax, 0
-call printf
+;mov rdi, test2
+;movzx rsi, word[x1]
+;mov rax, 0
+;call printf
 
 cmp byte[counterPoints],  0
 je afterStartProg
@@ -181,12 +196,12 @@ call vector
 call searchTriangle
 
 ;exemple pour la multi
-mov ax, word[testValue1]
-mul word[testValue2]
-mov rdi, test2
-movzx rsi, ax
-mov rax, 0
-call printf
+;mov ax, word[testValue1]
+;mul word[testValue2]
+;mov rdi, test2
+;movzx rsi, ax
+;mov rax, 0
+;call printf
 
 ;##############################################
 ;# Fin de la partie ou Simon fait de la merde #
@@ -230,10 +245,10 @@ mov rsi,qword[gc]
 mov edx,0xFFFFFF	; Couleur du crayon ; blanc
 call XSetForeground
 
-mov dword[x1], 50
-mov dword[y1], 50
-mov dword[x2], 200
-mov dword[y2], 200
+;mov dword[x1], 50
+;mov dword[y1], 50
+;mov dword[x2], 200
+;mov dword[y2], 200
 
 ; dessin de la ligne 1
 mov rdi,qword[display_name]
@@ -245,12 +260,11 @@ mov r9d,dword[x2]	; coordonnée destination en x
 push qword[y2]		; coordonnée destination en y
 call XDrawLine
 
-mov rdi, test2
-mov rsi, 2
-mov rax, 0
-call printf
 
-jmp comebackLines
+mov al, byte[firstPoint]
+cmp byte[startingNumber], al
+
+;jne searchClockwise
 
 ; ############################
 ; # FIN DE LA ZONE DE DESSIN #
@@ -271,6 +285,9 @@ closeDisplay:
     xor	    rdi,rdi
     call    exit
 
+;#############################
+;#	Les Fonctions        #
+;#############################
 global generate
 generate:
 
@@ -288,13 +305,13 @@ generate:
 	mov [tableX + ecx * WORD], ax
 
 	;code pour voir le tableau
-	;mov rdi, lmao
-	;movzx rsi, byte[counterPoints]
-	;movzx rdx, word[tableX + ecx*WORD]
-	;mov rax, 0
-	;call printf
+	mov rdi, lmao
+	movzx rsi, byte[counterPoints]
+	movzx rdx, word[tableX + ecx*WORD]
+	mov rax, 0
+	call printf
 
-   	tooHigh2:
+	tooHigh2:
 	rdrand rax
 
    	cmp ax, 350
@@ -308,11 +325,11 @@ generate:
 	mov [tableY + ecx * WORD], ax
 
 	;code pour voir le tableau
-	;mov rdi, lmao
-	;movzx rsi, byte[counterPoints]
-	;movzx rdx, word[tableY + ecx*WORD]
-	;mov rax, 0
-	;call printf
+	mov rdi, lmao
+	movzx rsi, byte[counterPoints]
+	movzx rdx, word[tableY + ecx*WORD]
+	mov rax, 0
+	call printf
 ret
 
 global vector
@@ -341,11 +358,11 @@ storeX:
 	jmp continueVector
 
 showStarting:
-	mov rdi, lmao
-	movzx rsi, byte[startingNumber]
-	movzx rdx, word[startingPoint]
-	mov rax, 0
-	call printf
+	;mov rdi, lmao
+	;movzx rsi, byte[startingNumber]
+	;movzx rdx, word[startingPoint]
+	;mov rax, 0
+	;call printf
 ret
 
 global searchTriangle
@@ -353,84 +370,313 @@ global searchTriangle
 searchTriangle:
 	mov al, byte[startingNumber]
 	mov byte[firstPoint], al
+
+	cmp byte[firstPoint], 0
+	je isEqualTo0
+
+	mov byte[secondPoint], 0
+	jmp searchClockwise
+
+	isEqualTo0:
 	mov byte[secondPoint], 1
 
 	searchClockwise:
+
 		mov byte[counterTable], 0
+
 		loop:
 		call clockwise
-		cmp ax, 0
-		jl skip
+		cmp al, 0
+
+		je skip
+
 		mov al, byte[counterTable]
 		mov byte[secondPoint], al
+
+		mov rdi, test4
+		movzx rsi, al
+		mov rax, 0
+		call printf
+
+		mov rdi, test6
+		movzx rsi, byte[counterTable]
+		mov rax, 0
+		call printf
+
+		mov rdi, test5
+		movzx rsi, byte[secondPoint]
+		mov rax, 0
+		call printf
+
+		jmp tempSkip
+
 		skip:
+		mov rdi, test4
+		movzx rsi, al
+		mov rax, 0
+		call printf
+
+		mov rdi, test6
+		movzx rsi, byte[counterTable]
+		mov rax, 0
+		call printf
+
+		mov rdi, test5
+		movzx rsi, byte[secondPoint]
+		mov rax, 0
+		call printf
+
+		tempSkip:
+
 		inc byte[counterTable]
 
-		;movzx ecx, byte[firstPoint]
-		;mov eax, [tableX+ecx*DWORD]
-		;mov dword[x1], eax
-		;mov eax, [tableY+ecx*DWORD]
-		;mov dword[y1], eax
+		cmp byte[counterTable], MaxPoints
+		jb loop
 
-		;movzx ecx, byte[secondPoint]
-		;mov eax, [tableX+ecx*DWORD]
-		;mov dword[x2], eax
-		;mov eax, [tableY+ecx*DWORD]
-		;mov dword[y2], eax
+		movzx ecx, byte[firstPoint]
+		mov ax, [tableX+ecx*WORD]
+		movzx ebx, ax
+		mov dword[x1], ebx
+		mov ax, [tableY+ecx*WORD]
+		movzx ebx, ax
+		mov dword[y1], ebx
+
+		movzx ecx, byte[secondPoint]
+		mov ax, [tableX+ecx*WORD]
+		movzx ebx, ax
+		mov dword[x2], ebx
+		mov ax, [tableY+ecx*WORD]
+		movzx ebx, ax
+		mov dword[y2], ebx
+
+		mov al, byte[secondPoint]
+		mov byte[firstPoint], al
+
 		jmp drawLines
-
-		comebackLines:
-
-		mov al, byte[firstPoint]
-		cmp byte[startingNumber], al
-		jne searchClockwise
-
 ret
 
+; ca fonctionne par pitie ne TOUCHE PAS a ca
 global clockwise
 
 clockwise:
 	movzx ecx, byte[counterTable]	;coordonnee x de I
 	mov ax, [tableX+ecx*WORD]
-	movzx ecx, byte[firstPoint]	;coordonnee x de P
-	sub ax, [tableX+ecx*WORD]	;xI - xP
 
-	mov word[valueClock1], ax	;xPI
+	movzx ecx, byte[firstPoint]	;coordonnee x de P
+	mov bx, [tableX+ecx*WORD]
+
+	sub ax, bx	;xI - xP
+
+	js negative1
+
+	mov dword[valueClock1], eax	;xPI
+
+	mov rdi, testClock1
+	movsx rsi, dword[valueClock1]
+	mov rax, 0
+	call printf
+
+	jmp endNeg1
+
+	negative1:
+
+	mov word[temp], ax
+	movsx eax, word[temp]
+	mov dword[valueClock1], eax	;xPI
+
+	mov rdi, testClock1
+	movsx rsi, dword[valueClock1]
+	mov rax, 0
+	call printf
+
+	endNeg1:
 
 	movzx ecx, byte[counterTable]	;coordonnee y de I
 	mov ax, [tableY+ecx*WORD]
-	movzx ecx, byte[firstPoint]	;coordonnee y de P
-	sub ax, [tableY+ecx*WORD]	;xI - xP
 
-	mov word[valueClock2], ax	;yPI
+	movzx ecx, byte[firstPoint]	;coordonnee y de P
+	mov bx, [tableY+ecx*WORD]
+
+	sub ax, bx			;xI - xP
+
+	js negative2
+
+	mov dword[valueClock2], eax	;yPI
+
+	mov rdi, testClock2
+	movsx rsi, dword[valueClock2]
+	mov rax, 0
+	call printf
+
+	jmp endNeg2
+
+	negative2:
+
+	mov word[temp], ax
+	movsx eax, word[temp]
+	mov dword[valueClock2], eax	;yPI
+
+	mov rdi, testClock2
+	movsx rsi, dword[valueClock2]
+	mov rax, 0
+	call printf
+
+	endNeg2:
 
 ;#############################################################
 
 	movzx ecx, byte[secondPoint]	;coordonnee x de Q
 	mov ax, [tableX+ecx*WORD]
-	movzx ecx, byte[counterTable]	;coordonnee x de I
-	sub ax, [tableX+ecx*WORD]	;xI - xP
 
-	mov word[valueClock3], ax	;xIQ
+	movzx ecx, byte[counterTable]	;coordonnee x de I
+	mov bx, [tableX+ecx*WORD]
+
+	sub ax, bx			;xQ - xI
+
+	js negative3
+
+	mov dword[valueClock3], eax	;xIQ
+
+	mov rdi, testClock3
+	movsx rsi, dword[valueClock3]
+	mov rax, 0
+	call printf
+
+	jmp endNeg3
+
+	negative3:
+
+	mov word[temp], ax
+	movsx eax, word[temp]
+	mov dword[valueClock3], eax	;xIQ
+
+	mov rdi, testClock3
+	movsx rsi, dword[valueClock3]
+	mov rax, 0
+	call printf
+
+	endNeg3:
 
 	movzx ecx, byte[secondPoint]	;coordonnee y de Q
 	mov ax, [tableY+ecx*WORD]
-	movzx ecx, byte[counterTable]	;coordonnee y de I
-	sub ax, [tableY+ecx*WORD]	;xI - xP
 
-	mov word[valueClock4], ax	;yIQ
+	movzx ecx, byte[counterTable]	;coordonnee y de I
+	mov bx, [tableY+ecx*WORD]
+
+	sub ax, [tableY+ecx*WORD]	;xQ - xI
+
+	js negative4
+
+	mov dword[valueClock4], eax	;yIQ
+
+	mov rdi, testClock4
+	movsx rsi, dword[valueClock4]
+	mov rax, 0
+	call printf
+
+	jmp endNeg4
+
+	negative4:
+
+	mov word[temp], ax
+	movsx eax, word[temp]
+	mov dword[valueClock4], eax	;yIQ
+
+	mov rdi, testClock4
+	movsx rsi, dword[valueClock4]
+	mov rax, 0
+	call printf
+
+	endNeg4:
 
 ;############################################################
 
-	mov ax, word[valueClock3]	;xIQ
-	mul word[valueClock2]		;yPI
-	mov word[multClock1], ax	;(xIQ * yPI)
+	mov eax, dword[valueClock3]	;xIQ
+	imul dword[valueClock2]		;yPI
 
-	mov ax, word[valueClock1]	;xPI
-	mul word[valueClock4]		;yIQ
-	mov word[multClock2], ax	;(xPI * yIQ)
+	js negativeMult1
 
-	mov ax, word[multClock1]
-	sub ax, word[multClock2]	;(xIQ * yPI) - (xPI * yIQ)
+	mov qword[multClock1], rax	;(xIQ * yPI)
 
+	mov rdi, testClockMult1
+	mov rsi, qword[multClock1]
+	mov rax, 0
+	call printf
+
+	jmp endNegMult1
+
+	negativeMult1:
+	mov dword[temp], eax
+	movsx rax, dword[temp]
+	mov qword[valueClock4], rax	;(xIQ * yPI)
+
+	mov rdi, testClockMult1
+	mov rsi, qword[multClock1]
+	mov rax, 0
+	call printf
+
+	endNegMult1:
+
+	mov eax, dword[valueClock1]	;xPI
+	imul dword[valueClock4]		;yIQ
+
+	js negativeMult2
+
+	mov qword[multClock2], rax	;(xPI * yIQ)
+
+	mov rdi, testClockMult2
+	mov rsi, qword[multClock2]
+	mov rax, 0
+	call printf
+
+	jmp endNegMult2
+
+	negativeMult2:
+	mov dword[temp], eax
+	movsx rax, dword[temp]
+	mov qword[multClock2], rax
+
+	mov rdi, testClockMult2
+	mov rsi, qword[multClock2]
+	mov rax, 0
+	call printf
+
+	endNegMult2:
+
+	mov rax, qword[multClock1]
+	sub rax, qword[multClock2]	;(xIQ * yPI) - (xPI * yIQ)
+
+	jns clockwiseResult
+
+	mov rdi, test3
+	mov rsi, rax
+	mov rax, 0
+	call printf
+
+	mov al, 0		;si le resultat est negatif al = 0
+	jmp clockwiseOther
+
+	clockwiseResult:
+
+	cmp ax, 0
+	je colinear
+
+	mov rdi, test3
+	mov rsi, rax
+	mov rax, 0
+	call printf
+
+	mov al, 1		;si le resultat est positif al = 1
+	jmp clockwiseOther
+
+	colinear:
+
+	mov rdi, test3
+	mov rsi, rax
+	mov rax, 0
+	call printf
+
+	mov al, 0		;si il est colineaire al = 0
+
+	clockwiseOther:
 ret
