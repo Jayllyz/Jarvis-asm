@@ -386,7 +386,7 @@ searchTriangle:
 
 		loop:
 		call clockwise
-		or al, 0
+		test al, al
 
 		jz skip
 
@@ -658,7 +658,7 @@ clockwise:
 
 	clockwiseResult:
 
-	or al, 0
+	test al, al
 	jz colinear
 
 	mov rdi, test3
