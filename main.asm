@@ -80,6 +80,10 @@ test4: db	"al = %d", 10, 0
 test5: db	"Q = %d", 10, 0
 test6: db	"counterTable = %d", 10, 0
 
+testPos: db	"Result Pos: %d", 10, 0
+testCol: db	"Result Col: %d", 10, 0
+testNeg: db	"Result Neg: %d", 10, 0
+
 testClock1: db 	"valueClock1: %d", 10, 0
 testClock2: db 	"valueClock2: %d", 10, 0
 testClock3: db 	"valueClock3: %d", 10, 0
@@ -648,7 +652,7 @@ clockwise:
 
 	jns clockwiseResult
 
-	mov rdi, test3
+	mov rdi, testNeg
 	mov rsi, rax
 	mov rax, 0
 	call printf
@@ -661,7 +665,7 @@ clockwise:
 	test al, al
 	jz colinear
 
-	mov rdi, test3
+	mov rdi, testPos
 	mov rsi, rax
 	mov rax, 0
 	call printf
@@ -671,7 +675,7 @@ clockwise:
 
 	colinear:
 
-	mov rdi, test3
+	mov rdi, testCol
 	mov rsi, rax
 	mov rax, 0
 	call printf
