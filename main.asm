@@ -325,11 +325,11 @@ generate:
 	mov [tableY + ecx * WORD], ax
 
 	;code pour voir le tableau
-	mov rdi, lmao
-	movzx rsi, byte[counterPoints]
-	movzx rdx, word[tableY + ecx*WORD]
-	mov rax, 0
-	call printf
+	;mov rdi, lmao
+	;movzx rsi, byte[counterPoints]
+	;movzx rdx, word[tableY + ecx*WORD]
+	;mov rax, 0
+	;call printf
 ret
 
 global vector
@@ -358,11 +358,11 @@ storeX:
 	jmp continueVector
 
 showStarting:
-	;mov rdi, lmao
-	;movzx rsi, byte[startingNumber]
-	;movzx rdx, word[startingPoint]
-	;mov rax, 0
-	;call printf
+	mov rdi, lmao
+	movzx rsi, byte[startingNumber]
+	movzx rdx, word[startingPoint]
+	mov rax, 0
+	call printf
 ret
 
 global searchTriangle
@@ -386,9 +386,9 @@ searchTriangle:
 
 		loop:
 		call clockwise
-		cmp al, 0
+		or al, 0
 
-		je skip
+		jz skip
 
 		mov al, byte[counterTable]
 		mov byte[secondPoint], al
@@ -658,8 +658,8 @@ clockwise:
 
 	clockwiseResult:
 
-	cmp ax, 0
-	je colinear
+	or al, 0
+	jz colinear
 
 	mov rdi, test3
 	mov rsi, rax
