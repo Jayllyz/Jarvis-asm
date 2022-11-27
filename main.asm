@@ -53,8 +53,8 @@ tableY:		resw	MaxPoints
 
 startingPoint: 	resw	1
 startingNumber:	resb	1
-firstPoint:	resb	1
-secondPoint:	resb	1
+P:	resb	1
+Q:	resb	1
 
 valueClock1:	resd	1
 valueClock2:	resd	1
@@ -77,7 +77,7 @@ y2:	dd	0
 test2: 	db 	"Le resultat: %d ", 10, 0
 test3: db	"Result: %d", 10, 0
 test4: db	"al = %d", 10, 0
-test5: db	"secondPoint = %d", 10, 0
+test5: db	"Q = %d", 10, 0
 test6: db	"counterTable = %d", 10, 0
 
 testClock1: db 	"valueClock1: %d", 10, 0
@@ -261,7 +261,7 @@ push qword[y2]		; coordonnée destination en y
 call XDrawLine
 
 
-mov al, byte[firstPoint]
+mov al, byte[P]
 cmp byte[startingNumber], al
 
 ;jne searchClockwise
@@ -369,16 +369,16 @@ global searchTriangle
 
 searchTriangle:
 	mov al, byte[startingNumber]
-	mov byte[firstPoint], al
+	mov byte[P], al
 
-	cmp byte[firstPoint], 0
+	cmp byte[P], 0
 	je isEqualTo0
 
-	mov byte[secondPoint], 0
+	mov byte[Q], 0
 	jmp searchClockwise
 
 	isEqualTo0:
-	mov byte[secondPoint], 1
+	mov byte[Q], 1
 
 	searchClockwise:
 
@@ -391,7 +391,7 @@ searchTriangle:
 		jz skip
 
 		mov al, byte[counterTable]
-		mov byte[secondPoint], al
+		mov byte[Q], al
 
 		mov rdi, test4
 		movzx rsi, al
@@ -404,7 +404,7 @@ searchTriangle:
 		call printf
 
 		mov rdi, test5
-		movzx rsi, byte[secondPoint]
+		movzx rsi, byte[Q]
 		mov rax, 0
 		call printf
 
@@ -422,7 +422,7 @@ searchTriangle:
 		call printf
 
 		mov rdi, test5
-		movzx rsi, byte[secondPoint]
+		movzx rsi, byte[Q]
 		mov rax, 0
 		call printf
 
@@ -433,7 +433,7 @@ searchTriangle:
 		cmp byte[counterTable], MaxPoints
 		jb loop
 
-		movzx ecx, byte[firstPoint]
+		movzx ecx, byte[P]
 		mov ax, [tableX+ecx*WORD]
 		movzx ebx, ax
 		mov dword[x1], ebx
@@ -441,7 +441,7 @@ searchTriangle:
 		movzx ebx, ax
 		mov dword[y1], ebx
 
-		movzx ecx, byte[secondPoint]
+		movzx ecx, byte[Q]
 		mov ax, [tableX+ecx*WORD]
 		movzx ebx, ax
 		mov dword[x2], ebx
@@ -449,8 +449,8 @@ searchTriangle:
 		movzx ebx, ax
 		mov dword[y2], ebx
 
-		mov al, byte[secondPoint]
-		mov byte[firstPoint], al
+		mov al, byte[Q]
+		mov byte[P], al
 
 		jmp drawLines
 ret
@@ -462,7 +462,7 @@ clockwise:
 	movzx ecx, byte[counterTable]	;coordonnee x de I
 	mov ax, [tableX+ecx*WORD]
 
-	movzx ecx, byte[firstPoint]	;coordonnee x de P
+	movzx ecx, byte[P]	;coordonnee x de P
 	mov bx, [tableX+ecx*WORD]
 
 	sub ax, bx	;xI - xP
@@ -494,7 +494,7 @@ clockwise:
 	movzx ecx, byte[counterTable]	;coordonnee y de I
 	mov ax, [tableY+ecx*WORD]
 
-	movzx ecx, byte[firstPoint]	;coordonnee y de P
+	movzx ecx, byte[P]	;coordonnee y de P
 	mov bx, [tableY+ecx*WORD]
 
 	sub ax, bx			;xI - xP
@@ -525,7 +525,7 @@ clockwise:
 
 ;#############################################################
 
-	movzx ecx, byte[secondPoint]	;coordonnee x de Q
+	movzx ecx, byte[Q]	;coordonnee x de Q
 	mov ax, [tableX+ecx*WORD]
 
 	movzx ecx, byte[counterTable]	;coordonnee x de I
@@ -557,7 +557,7 @@ clockwise:
 
 	endNeg3:
 
-	movzx ecx, byte[secondPoint]	;coordonnee y de Q
+	movzx ecx, byte[Q]	;coordonnee y de Q
 	mov ax, [tableY+ecx*WORD]
 
 	movzx ecx, byte[counterTable]	;coordonnee y de I
