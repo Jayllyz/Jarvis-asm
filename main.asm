@@ -77,12 +77,13 @@ y2:	dd	0
 test2: 	db 	"Le resultat: %d ", 10, 0
 test3: db	"Result: %d", 10, 0
 test4: db	"al = %d", 10, 0
-test5: db	"Q = %d", 10, 0
+test5: db	"Q = %ld", 10, 0
 test6: db	"counterTable = %d", 10, 0
+test7: db	"rax = %ld", 10, 0
 
-testPos: db	"Result Pos: %d", 10, 0
-testCol: db	"Result Col: %d", 10, 0
-testNeg: db	"Result Neg: %d", 10, 0
+testPos: db	"Result Pos: %ld", 10, 0
+testCol: db	"Result Col: %ld", 10, 0
+testNeg: db	"Result Neg: %ld", 10, 0
 
 testClock1: db 	"valueClock1: %d", 10, 0
 testClock2: db 	"valueClock2: %d", 10, 0
@@ -647,40 +648,50 @@ clockwise:
 
 	endNegMult2:
 
+;####################################################################
+
 	mov rax, qword[multClock1]
 	sub rax, qword[multClock2]	;(xIQ * yPI) - (xPI * yIQ)
 
-	jns clockwiseResult
+	mov rbx, rax
+
+	mov rdi, test7
+	mov rsi, rax
+	mov rax, 0
+	call printf
+
+	cmp rbx, 0
+	jge clockwiseResult
 
 	mov rdi, testNeg
-	mov rsi, rax
+	mov rsi, rbx
 	mov rax, 0
 	call printf
 
 	mov al, 0		;si le resultat est negatif al = 0
-	jmp clockwiseOther
+	jmp clockwiseEnd
 
 	clockwiseResult:
 
-	test al, al
-	jz colinear
+	cmp rbx, 0
+	je colinear
 
 	mov rdi, testPos
-	mov rsi, rax
+	mov rsi, rbx
 	mov rax, 0
 	call printf
 
 	mov al, 1		;si le resultat est positif al = 1
-	jmp clockwiseOther
+	jmp clockwiseEnd
 
 	colinear:
 
 	mov rdi, testCol
-	mov rsi, rax
+	mov rsi, rbx
 	mov rax, 0
 	call printf
 
 	mov al, 0		;si il est colineaire al = 0
 
-	clockwiseOther:
+	clockwiseEnd:
 ret
