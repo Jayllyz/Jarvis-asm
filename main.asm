@@ -77,10 +77,9 @@ y2:	dd	0
 ;pas dans le code de base
 test2: 	db 	"Le resultat: %d ", 10, 0
 test3: db	"Result: %d", 10, 0
-test4: db	"al = %d", 10, 0
+test4: db	"P = %ld", 10, 0
 test5: db	"Q = %ld", 10, 0
 test6: db	"counterTable = %d", 10, 0
-test7: db	"rax = %ld", 10, 0
 
 ok: db "ok", 10, 0
 pos: db "positive", 10, 0
@@ -105,6 +104,8 @@ counterTable:	db	0
 
 testValue1:	dw	2
 testValue2:	dw	2
+
+countValue: dw  0
 
 section .text
 
@@ -274,7 +275,7 @@ call XDrawLine
 mov al, byte[P]
 cmp byte[startingNumber], al
 
-;jne searchClockwise
+jne returnFromDrawLine
 
 ; ############################
 ; # FIN DE LA ZONE DE DESSIN #
@@ -315,11 +316,11 @@ generate:
 	mov [tableX + ecx * WORD], ax
 
 	;code pour voir le tableau
-	mov rdi, lmao
-	movzx rsi, byte[counterPoints]
-	movzx rdx, word[tableX + ecx*WORD]
-	mov rax, 0
-	call printf
+	;mov rdi, lmao
+	;movzx rsi, byte[counterPoints]
+	;movzx rdx, word[tableX + ecx*WORD]
+	;mov rax, 0
+	;call printf
 
 	tooHigh2:
 	rdrand rax
@@ -335,11 +336,11 @@ generate:
 	mov [tableY + ecx * WORD], ax
 
 	;code pour voir le tableau
-	mov rdi, lmao
-	movzx rsi, byte[counterPoints]
-	movzx rdx, word[tableY + ecx*WORD]
-	mov rax, 0
-	call printf
+	;mov rdi, lmao
+	;movzx rsi, byte[counterPoints]
+	;movzx rdx, word[tableY + ecx*WORD]
+	;mov rax, 0
+	;call printf
 ret
 
 global vector
@@ -368,15 +369,11 @@ storeX:
 	jmp continueVector
 
 showStarting:
-    mov rdi, ok
-    mov rax, 0
-    call printf
-
-	mov rdi, lmao
-	movzx rsi, byte[startingNumber]
-	movzx rdx, word[startingPoint]
-	mov rax, 0
-	call printf
+	;mov rdi, lmao
+	;movzx rsi, byte[startingNumber]
+	;movzx rdx, word[startingPoint]
+	;mov rax, 0
+	;call printf
 ret
 
 global searchTriangle
@@ -384,6 +381,8 @@ global searchTriangle
 searchTriangle:
 	mov al, byte[startingNumber]
 	mov byte[P], al
+
+	returnFromDrawLine:
 
 	cmp byte[P], 0
 	je isEqualTo0
@@ -407,20 +406,12 @@ searchTriangle:
 		mov al, byte[counterTable]
 		mov byte[Q], al
 
-		mov rdi, test4
-		movzx rsi, al
-		mov rax, 0
-		call printf
-
 		skip:
 
 		inc byte[counterTable]
 
 		cmp byte[counterTable], MaxPoints
 		jb loop
-
-		mov al, byte[Q]
-		mov byte[P], al
 
 		movzx ecx, byte[P]
 		mov ax, [tableX+ecx*WORD]
@@ -437,6 +428,9 @@ searchTriangle:
 		mov ax, [tableY+ecx*WORD]
 		movzx ebx, ax
 		mov dword[y2], ebx
+
+		mov al, byte[Q]
+		mov byte[P], al
 
 		jmp drawLines
 ret
@@ -467,7 +461,6 @@ clockwise:
     mov rdi, testClock1
     movsx rsi, dword[valueClock1]
     mov rax, 0
-    call printf
 
 ;########################################################
 
@@ -493,7 +486,6 @@ clockwise:
     mov rdi, testClock2
     movsx rsi, dword[valueClock2]
     mov rax, 0
-    call printf
 
 ;########################################################
 
@@ -519,7 +511,6 @@ clockwise:
     mov rdi, testClock3
     movsx rsi, dword[valueClock3]
     mov rax, 0
-    call printf
 
 ;########################################################
 
@@ -545,7 +536,6 @@ clockwise:
     mov rdi, testClock4
     movsx rsi, dword[valueClock4]
     mov rax, 0
-    call printf
 
 ;########################################################
 
@@ -582,12 +572,10 @@ clockwise:
     mov rdi, testClockMult1
     movsx rsi, dword[multClock1]
     mov rax, 0
-    call printf
 
     mov rdi, testClockMult2
     movsx rsi, dword[multClock2]
     mov rax, 0
-    call printf
 
 ;#######################################################
 
@@ -602,7 +590,6 @@ clockwise:
     positive:
 	    mov rdi, pos
 	    mov rax, 0
-	    call printf
 
         mov al, 0
         jmp end
@@ -610,7 +597,6 @@ clockwise:
     notPositive:
 	    mov rdi, neg
 	    mov rax, 0
-	    call printf
 
         mov al, 1
 
