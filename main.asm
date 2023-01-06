@@ -31,7 +31,7 @@ extern exit
 %define DWORD	4
 %define WORD	2
 %define BYTE	1
-%define MaxPoints	5
+%define MaxPoints	25
 
 global main
 
@@ -46,10 +46,11 @@ window:		resq	1
 gc:		resq	1
 
 ;pas dans le code de base
-temp:		resq	1
-
-tableX:		resw	MaxPoints
-tableY:		resw	MaxPoints
+tableX:		resw	MaxPoints + 1
+tableY:		resw	MaxPoints + 1
+redX:       resw    1
+redY:       resw    1
+tableSide:  resw    MaxPoints
 
 startingPoint: 	resw	1
 startingNumber:	resb	1
@@ -85,10 +86,6 @@ ok: db "ok", 10, 0
 pos: db "positive", 10, 0
 neg: db "negative", 10, 0
 
-testPos: db	"Result Pos: %ld", 10, 0
-testCol: db	"Result Col: %ld", 10, 0
-testNeg: db	"Result Neg: %ld", 10, 0
-
 testClock1: db 	"valueClock1: %lld", 10, 0
 testClock2: db 	"valueClock2: %lld", 10, 0
 testClock3: db 	"valueClock3: %lld", 10, 0
@@ -106,6 +103,16 @@ testValue1:	dw	2
 testValue2:	dw	2
 
 countValue: dw  0
+redPoint:   db  0
+
+notFirstTime:  db  0
+sidePointCount: db  0
+sideCounter:    db  0
+sideLoopCount:  db  0
+resetValue:     db  0
+insideText:     db  "Le point (%d, %d) est contenu dans l'enveloppe", 10, 0
+outsideText:    db  "Le point (%d, %d) n'est pas contenu dans l'enveloppe", 10, 0
+placeStatus:    db  0
 
 section .text
 
@@ -189,11 +196,6 @@ placePoints:
 
 call generate
 
-;mov rdi, test2
-;movzx rsi, word[x1]
-;mov rax, 0
-;call printf
-
 cmp byte[counterPoints],  0
 je afterStartProg
 jmp dessin
@@ -206,13 +208,22 @@ jb placePoints
 call vector
 call searchTriangle
 
-;exemple pour la multi
-;mov ax, word[testValue1]
-;mul word[testValue2]
-;mov rdi, test2
-;movzx rsi, ax
-;mov rax, 0
-;call printf
+placePoints2:
+
+call generateRedPoint
+jmp dessin2
+
+comebackPoints2:
+
+cmp byte[notFirstTime], 0
+je skipThis
+
+call checkInside
+
+skipThis:
+mov byte[notFirstTime], 1
+
+jmp flush
 
 ;##############################################
 ;# Fin de la partie ou Simon fait de la merde #
@@ -222,7 +233,9 @@ dessin:
 ;couleur du point 1
 mov rdi,qword[display_name]
 mov rsi,qword[gc]
-mov edx,0xFF0000	; Couleur du crayon ; rouge
+
+mov edx,0x0000FF	; Couleur du crayon bleu
+
 call XSetForeground
 
 cmp byte[counterPoints], 0
@@ -248,6 +261,32 @@ call XFillArc
 cmp byte[counterPoints], MaxPoints
 jb comebackPoints
 
+dessin2:
+;couleur du point 1
+mov rdi,qword[display_name]
+mov rsi,qword[gc]
+
+mov edx,0xFF0000	; Couleur du crayon rouge
+
+call XSetForeground
+
+; Dessin d'un point rouge sous forme d'un petit rond : coordonnées (100,200)
+mov rdi,qword[display_name]
+mov rsi,qword[window]
+mov rdx,qword[gc]
+mov rcx,qword[x1]		; coordonnée en x du point
+sub ecx,3
+mov r8,qword[y1] 		; coordonnée en y du point
+sub r8,3
+mov r9,6
+mov rax,23040
+push rax
+push 0
+push r9
+call XFillArc
+
+jmp comebackPoints2
+
 drawLines:
 
 ;couleur de la ligne 1
@@ -255,11 +294,6 @@ mov rdi,qword[display_name]
 mov rsi,qword[gc]
 mov edx,0xFFFFFF	; Couleur du crayon ; blanc
 call XSetForeground
-
-;mov dword[x1], 50
-;mov dword[y1], 50
-;mov dword[x2], 200
-;mov dword[y2], 200
 
 ; dessin de la ligne 1
 mov rdi,qword[display_name]
@@ -276,10 +310,12 @@ mov al, byte[P]
 cmp byte[startingNumber], al
 
 jne returnFromDrawLine
+jmp placePoints2
 
 ; ############################
 ; # FIN DE LA ZONE DE DESSIN #
 ; ############################
+
 jmp flush
 
 flush:
@@ -309,37 +345,37 @@ generate:
 	ja tooHigh
 	cmp ax, 50
 	jb tooHigh
-    	mov word[x1],ax
+    mov word[x1],ax
 
 	;Rangement dans le tableau
 	movzx ecx, byte[counterPoints]
 	mov [tableX + ecx * WORD], ax
 
 	;code pour voir le tableau
-	;mov rdi, lmao
-	;movzx rsi, byte[counterPoints]
-	;movzx rdx, word[tableX + ecx*WORD]
-	;mov rax, 0
+	mov rdi, lmao
+	movzx rsi, byte[counterPoints]
+	movzx rdx, word[tableX + ecx*WORD]
+	mov rax, 0
 	;call printf
 
 	tooHigh2:
 	rdrand rax
 
    	cmp ax, 350
-	ja tooHigh2
-    	cmp ax, 50
-    	jb tooHigh2
-    	mov word[y1],ax
+    ja tooHigh2
+	cmp ax, 50
+	jb tooHigh2
+	mov word[y1],ax
 
 	;Rangement dans le tableau
 	movzx ecx, byte[counterPoints]
 	mov [tableY + ecx * WORD], ax
 
 	;code pour voir le tableau
-	;mov rdi, lmao
-	;movzx rsi, byte[counterPoints]
-	;movzx rdx, word[tableY + ecx*WORD]
-	;mov rax, 0
+	mov rdi, lmao
+	movzx rsi, byte[counterPoints]
+	movzx rdx, word[tableY + ecx*WORD]
+	mov rax, 0
 	;call printf
 ret
 
@@ -381,6 +417,9 @@ global searchTriangle
 searchTriangle:
 	mov al, byte[startingNumber]
 	mov byte[P], al
+
+	movzx ecx, byte[counterTable]
+	movzx ax, al
 
 	returnFromDrawLine:
 
@@ -432,6 +471,18 @@ searchTriangle:
 		mov al, byte[Q]
 		mov byte[P], al
 
+    	movzx ecx, byte[sidePointCount]
+    	movzx ax, al
+
+    	mov [tableSide + ecx * WORD], ax
+    	inc byte[sidePointCount]
+
+    	mov rdi, lmao
+    	movzx rsi, byte[sidePointCount]
+    	movzx rdx, word[tableSide+ecx*WORD]
+    	mov rax, 0
+    	;call printf
+
 		jmp drawLines
 ret
 
@@ -461,6 +512,7 @@ clockwise:
     mov rdi, testClock1
     movsx rsi, dword[valueClock1]
     mov rax, 0
+    ;call printf
 
 ;########################################################
 
@@ -486,6 +538,7 @@ clockwise:
     mov rdi, testClock2
     movsx rsi, dword[valueClock2]
     mov rax, 0
+    ;call printf
 
 ;########################################################
 
@@ -511,6 +564,7 @@ clockwise:
     mov rdi, testClock3
     movsx rsi, dword[valueClock3]
     mov rax, 0
+    ;call printf
 
 ;########################################################
 
@@ -536,6 +590,7 @@ clockwise:
     mov rdi, testClock4
     movsx rsi, dword[valueClock4]
     mov rax, 0
+    ;call printf
 
 ;########################################################
 
@@ -601,4 +656,138 @@ clockwise:
         mov al, 1
 
     end:
+ret
+
+global generateRedPoint
+generateRedPoint:
+
+	redTooHigh:
+	rdrand rax
+
+	cmp ax, 350
+	ja redTooHigh
+	cmp ax, 50
+	jb redTooHigh
+    mov word[x1],ax
+
+	;Rangement dans le tableau
+	mov byte[redX], al
+	mov ecx, 0
+	mov ecx, MaxPoints
+	inc ecx
+	mov word[tableX+ecx*WORD], ax
+
+	;code pour voir le tableau
+	mov rdi, lmao
+	movsx rsi, ecx
+	movsx rdx, word[tableX+ecx*WORD]
+	mov rax, 0
+	;call printf
+
+	redTooHigh2:
+	rdrand rax
+
+   	cmp ax, 350
+	ja redTooHigh2
+	cmp ax, 50
+	jb redTooHigh2
+	mov word[y1],ax
+
+	;Rangement dans le tableau
+	mov byte[redY], al
+	mov ecx, 0
+	mov ecx, MaxPoints
+	inc ecx
+	mov word[tableY+ecx*WORD], ax
+
+	;code pour voir le tableau
+	mov rdi, lmao
+	movsx rsi, ecx
+	movzx rdx, word[tableY+ecx*WORD]
+	mov rax, 0
+	;call printf
+ret
+
+global checkInside
+checkInside:
+
+    mov bl, MaxPoints
+    inc bl
+    mov byte[Q], bl
+
+    mov ecx, 0
+    mov dx, word[tableSide+ecx*WORD]
+    mov byte[resetValue], dl
+
+    sideLoop:
+    movzx ecx, byte[sideCounter]
+
+    mov ax, word[tableSide+ecx*WORD]
+	mov byte[P], al
+
+	inc byte[sideCounter]
+
+    movzx ecx, byte[sideCounter]
+
+    cmp cl, byte[sidePointCount]
+    je resetSide
+
+    mov ax, word[tableSide+ecx*WORD]
+	mov byte[counterTable], al
+	jmp endReset
+
+	resetSide:
+    mov al, byte[resetValue]
+    mov byte[counterTable], al
+    endReset:
+
+	inc byte[sideLoopCount]
+
+	mov rdi, test4
+	movzx rsi, byte[P]
+	mov rax, 0
+	;call printf
+
+	mov rdi, test6
+	movzx rsi, byte[counterTable]
+	mov rax, 0
+	;call printf
+
+	mov rdi, test5
+	movzx rsi, byte[Q]
+	mov rax, 0
+	;call printf
+
+	call clockwise
+	cmp al, 0
+	jne notInside
+
+	mov rdi, test3
+	movzx rsi, al
+	mov rax, 0
+	;call printf
+
+    mov bl, byte[sideLoopCount]
+    inc bl
+
+    cmp byte[sidePointCount], bl
+    jge sideLoop
+
+    isInside:
+        mov rdi, insideText
+        movzx rsi, word[redX]
+        movzx rdx, word[redY]
+        mov rax, 0
+        call printf
+
+        jmp endInside
+
+    notInside:
+        mov rdi, outsideText
+        movzx rsi, word[redX]
+        movzx rdx, word[redY]
+        mov rax, 0
+        call printf
+
+    endInside:
 ret
