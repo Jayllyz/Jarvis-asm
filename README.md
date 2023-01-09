@@ -4,6 +4,8 @@
   Assembly ESGI Project
 </p>
 
+<div align="center"><img align="center" alt="Project screen" src="https://user-images.githubusercontent.com/16305216/211287951-75993a02-c00b-46bf-865c-418885fb9729.png"></div>
+
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)
@@ -37,9 +39,9 @@ In this implementation, we also add one point to the list, and then we search if
 
 ```bash
 su - # You need to be user root otherwise you will have seg fault.
+cd # Go to your project directory
 compile64 jarvis.asm
 exit
-cd # Go to your project directory
 ./jarvis
 ```
 
