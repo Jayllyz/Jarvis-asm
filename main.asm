@@ -179,14 +179,7 @@ cmp dword[event],KeyPress		; Si on appuie sur une touche
 je closeDisplay				; on saute au label 'closeDisplay' qui ferme la fenêtre
 jmp boucle
 
-;#########################################
-;#	DEBUT DE LA ZONE DE DESSIN	 #
-;#########################################
-
-
-;########################################
-;#   Partie ou Simon fait de la merde   #
-;########################################
+;##################################################
 
 startProg:
 
@@ -225,9 +218,10 @@ mov byte[notFirstTime], 1
 
 jmp flush
 
-;##############################################
-;# Fin de la partie ou Simon fait de la merde #
-;##############################################
+
+;#########################################
+;#	DEBUT DE LA ZONE DE DESSIN	 #
+;#########################################
 
 dessin:
 ;couleur du point 1
@@ -243,7 +237,7 @@ je startProg
 
 afterStartProg:
 
-; Dessin d'un point rouge sous forme d'un petit rond : coordonnées (100,200)
+; Dessin des points 
 mov rdi,qword[display_name]
 mov rsi,qword[window]
 mov rdx,qword[gc]
@@ -270,7 +264,7 @@ mov edx,0xFF0000	; Couleur du crayon rouge
 
 call XSetForeground
 
-; Dessin d'un point rouge sous forme d'un petit rond : coordonnées (100,200)
+; Dessin du point
 mov rdi,qword[display_name]
 mov rsi,qword[window]
 mov rdx,qword[gc]
@@ -333,7 +327,7 @@ closeDisplay:
     call    exit
 
 ;#############################
-;#	Les Fonctions        #
+;#	    Les Fonctions        #
 ;#############################
 global generate
 generate:
@@ -486,7 +480,7 @@ searchTriangle:
 		jmp drawLines
 ret
 
-; ca fonctionne pas par pitie TOUCHE a ca
+
 global clockwise
 
 clockwise:
